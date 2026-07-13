@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiFetch, API_BASE } from "@/lib/api";
 import { Asset, STATUS_COLORS, HealthAnalysis, PreventiveRec } from "@/lib/types";
 import { QRCodeSVG } from "qrcode.react";
+import { ZoomableQR } from "@/components/ZoomableQR";
 
 export default function AssetDetailPage() {
   const params = useParams();
@@ -174,7 +175,7 @@ export default function AssetDetailPage() {
           <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
             <h2 className="font-semibold text-gray-900 mb-3">QR Code</h2>
             <div className="inline-block bg-white border rounded-lg p-3">
-              <QRCodeSVG value={publicUrl} size={160} />
+              <ZoomableQR value={publicUrl} size={160} />
             </div>
             <button onClick={downloadQR} className="mt-4 w-full py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800">Download QR (PNG)</button>
             <button onClick={() => window.print()} className="mt-2 w-full py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50">Print Asset Label</button>

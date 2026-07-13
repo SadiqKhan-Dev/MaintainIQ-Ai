@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiFetchPublic } from "@/lib/api";
 import { PublicAsset, STATUS_COLORS } from "@/lib/types";
-import { QRCodeSVG } from "qrcode.react";
+import { ZoomableQR } from "@/components/ZoomableQR";
 
 export default function PublicAssetPage() {
   const params = useParams();
@@ -60,7 +60,7 @@ export default function PublicAssetPage() {
           <p className="text-sm text-gray-500 mt-1 font-mono">{asset.asset_code}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg p-2">
-          <QRCodeSVG value={typeof window !== "undefined" ? window.location.href : ""} size={80} />
+          <ZoomableQR value={typeof window !== "undefined" ? window.location.href : ""} size={80} />
         </div>
       </div>
 
