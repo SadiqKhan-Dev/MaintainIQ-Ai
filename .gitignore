@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Next.js
+.next/
+out/
+build/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Environment / secrets (NEVER commit)
+.env
+.env.local
+.env.huggingface
+backend/.env
+backend/.env.local
+backend/.env.huggingface
+frontend/.env.local
+frontend/.env
+
+# Logs
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
