@@ -30,7 +30,22 @@ export default function AssetDetailPage() {
     setLoading(false);
   }, [code]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await apiFetch(`/api/assets/code/${code}`);
+        if (!cancelled) setAsset(data);
+      } catch (e: unknown) {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Asset not found");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [code]);
 
   const publicUrl = typeof window !== "undefined" ? `${window.location.origin}/assets/${code}` : `${API_BASE}/assets/${code}`;
 

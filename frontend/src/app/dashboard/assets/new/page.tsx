@@ -36,7 +36,8 @@ export default function NewAssetPage() {
     <div className="max-w-3xl mx-auto px-4 py-8">
       <Link href="/dashboard/assets" className="text-sm text-blue-600 hover:text-blue-800 mb-4 inline-block">&larr; Back to Assets</Link>
       <h1 className="text-2xl font-bold text-gray-900 mb-1">Register New Asset</h1>
-      <p className="text-sm text-gray-500 mb-6">A unique QR-linked public page is generated automatically on creation.</p>
+      <p className="text-sm text-gray-500 mb-2">A unique QR-linked public page is generated automatically on creation.</p>
+      <Link href="/dashboard/assets/ai" className="text-sm text-purple-600 hover:text-purple-800 mb-6 inline-block">✨ Or add this asset by chatting with the AI assistant</Link>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
         {error && <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm mb-4">{error}</div>}

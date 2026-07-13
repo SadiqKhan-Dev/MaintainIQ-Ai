@@ -38,12 +38,20 @@ export default function AssetsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Assets</h1>
           <p className="text-sm text-gray-500 mt-1">{assets.length} total assets</p>
         </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
-        >
-          + Add Asset
-        </button>
+        <div className="flex gap-3">
+          <Link
+            href="/dashboard/assets/ai"
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition"
+          >
+            ✨ Add via AI
+          </Link>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+          >
+            + Add Asset
+          </button>
+        </div>
       </div>
 
       {showAddForm && <AddAssetForm onCreated={() => { setShowAddForm(false); loadAssets(); }} onCancel={() => setShowAddForm(false)} />}

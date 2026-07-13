@@ -14,6 +14,9 @@ from app.services.ai_enhancements import (
     translate_to_english,
 )
 from app.services.cloudinary_service import upload_image
+from app.services.ai_asset_agent import run_asset_assistant
+from app.middleware.auth import require_technician_or_admin
+from typing import Optional
 
 router = APIRouter(prefix="/api", tags=["ai"])
 
@@ -125,3 +128,18 @@ async def ai_preventive(request: Request, db: Session = Depends(get_db)):
 async def ai_translate(payload: TranslateIn):
     translated = await translate_to_english(payload.text)
     return {"translated": translated or payload.text}
+
+
+class AssetAssistantIn(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+
+
+@router.post("/ai/asset-assistant")
+def ai_asset_assistant(
+    payload: AssetAssistantIn,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    user = require_technician_or_admin(request)
+    return run_asset_assistant(payload.session_id, payload.message, user)
