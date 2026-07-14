@@ -30,6 +30,11 @@ def on_startup():
     Base.metadata.create_all(bind=engine)
 
 
+@app.get("/")
+def root():
+    return {"status": "ok", "service": "MaintainIQ API"}
+
+
 @app.get("/api/health")
 def health():
     return {"status": "ok", "service": "MaintainIQ API"}
