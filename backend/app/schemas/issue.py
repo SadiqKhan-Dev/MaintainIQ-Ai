@@ -43,6 +43,10 @@ class IssueResponse(BaseModel):
     ai_suggested: bool
     ai_edited: bool
     assigned_technician_id: Optional[str] = None
+    sla_due_at: Optional[datetime] = None
+    work_order_type: str = "reactive"
+    generated_by: Optional[str] = None
+    sla_status: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

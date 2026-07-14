@@ -62,6 +62,9 @@ class Issue(Base):
     ai_suggested = Column(Boolean, default=False, nullable=False)
     ai_edited = Column(Boolean, default=False, nullable=False)
     assigned_technician_id = Column(String(100), nullable=True)
+    sla_due_at = Column(DateTime, nullable=True)
+    work_order_type = Column(String(20), nullable=False, default="reactive")
+    generated_by = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

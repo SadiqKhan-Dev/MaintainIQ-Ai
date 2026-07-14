@@ -14,6 +14,7 @@ class AssetCreate(BaseModel):
     last_service_date: Optional[date] = None
     next_service_date: Optional[date] = None
     assigned_technician_id: Optional[str] = None
+    parent_asset_id: Optional[str] = None
 
     @model_validator(mode="after")
     def validate_dates(self):
@@ -32,6 +33,7 @@ class AssetUpdate(BaseModel):
     last_service_date: Optional[date] = None
     next_service_date: Optional[date] = None
     assigned_technician_id: Optional[str] = None
+    parent_asset_id: Optional[str] = None
 
 
 class AssetResponse(BaseModel):
@@ -45,6 +47,7 @@ class AssetResponse(BaseModel):
     last_service_date: Optional[date] = None
     next_service_date: Optional[date] = None
     assigned_technician_id: Optional[str] = None
+    parent_asset_id: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

@@ -20,6 +20,7 @@ export default function AssetDetailPage() {
   const [healthLoading, setHealthLoading] = useState(false);
   const [preventive, setPreventive] = useState<PreventiveRec | null>(null);
   const [preventiveLoading, setPreventiveLoading] = useState(false);
+  const [children, setChildren] = useState<Asset[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -30,6 +31,13 @@ export default function AssetDetailPage() {
     }
     setLoading(false);
   }, [code]);
+
+  useEffect(() => {
+    if (!asset?.id) return;
+    apiFetch("/api/assets")
+      .then((all: Asset[]) => setChildren(all.filter((a) => a.parent_asset_id === asset.id)))
+      .catch(() => {});
+  }, [asset?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -171,6 +179,24 @@ export default function AssetDetailPage() {
           </div>
         </div>
 
+        {children.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="font-semibold text-gray-900 mb-3">Sub-components ({children.length})</h2>
+            <div className="space-y-2">
+              {children.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/dashboard/assets/${c.asset_code}`}
+                  className="flex items-center justify-between p-2.5 rounded-lg hover:bg-gray-50 transition border border-gray-100"
+                >
+                  <span className="text-sm text-gray-900">{c.name}</span>
+                  <span className="text-xs font-mono text-gray-400">{c.asset_code}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="space-y-6">
           <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
             <h2 className="font-semibold text-gray-900 mb-3">QR Code</h2>
@@ -202,8 +228,13 @@ function EditAssetForm({ asset, onSaved, onCancel }: { asset: Asset; onSaved: ()
     name: asset.name, category: asset.category, location: asset.location,
     condition: asset.condition, status: asset.status,
     last_service_date: asset.last_service_date || "", next_service_date: asset.next_service_date || "",
+    parent_asset_id: asset.parent_asset_id || "",
   });
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [error, setError] = useState("");
+  useEffect(() => {
+    apiFetch("/api/assets").then(setAssets).catch(() => {});
+  }, []);
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setError("");
     try {
@@ -211,6 +242,7 @@ function EditAssetForm({ asset, onSaved, onCancel }: { asset: Asset; onSaved: ()
         method: "PATCH",
         body: JSON.stringify({
           ...form,
+          parent_asset_id: form.parent_asset_id || null,
           last_service_date: form.last_service_date || null,
           next_service_date: form.next_service_date || null,
         }),
@@ -232,6 +264,19 @@ function EditAssetForm({ asset, onSaved, onCancel }: { asset: Asset; onSaved: ()
         <F label="Status" v={form.status} onChange={(v) => setForm({ ...form, status: v })} />
         <F label="Last Service" v={form.last_service_date} onChange={(v) => setForm({ ...form, last_service_date: v })} />
         <F label="Next Service" v={form.next_service_date} onChange={(v) => setForm({ ...form, next_service_date: v })} />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Parent Asset</label>
+          <select
+            value={form.parent_asset_id}
+            onChange={(e) => setForm({ ...form, parent_asset_id: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          >
+            <option value="">None</option>
+            {assets.filter((a) => a.id !== asset.id).map((a) => (
+              <option key={a.id} value={a.id}>{a.name} ({a.asset_code})</option>
+            ))}
+          </select>
+        </div>
       </div>
       <div className="flex gap-3 mt-4">
         <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Save</button>

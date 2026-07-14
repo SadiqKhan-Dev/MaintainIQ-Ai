@@ -47,3 +47,22 @@ def notify_resolved(issue_number: str, asset_name: str, reporter_contact: str | 
         f"Thank you for using MaintainIQ. You can track the status anytime with your issue number."
     )
     send_email(reporter_contact or os.getenv("ADMIN_EMAIL", ""), f"[MaintainIQ] Issue {issue_number} resolved", body)
+
+
+def notify_status_change(issue_number: str, asset_name: str, new_status: str, reporter_contact: str | None, tracking_url: str | None = None) -> None:
+    body = (
+        f"Issue {issue_number} for asset '{asset_name}' status is now: {new_status.replace('_', ' ')}.\n\n"
+    )
+    if tracking_url:
+        body += f"Track it here: {tracking_url}\n"
+    send_email(reporter_contact or os.getenv("ADMIN_EMAIL", ""), f"[MaintainIQ] Issue {issue_number} update: {new_status}", body)
+
+
+def notify_reported(issue_number: str, asset_name: str, reporter_contact: str | None, tracking_url: str | None = None) -> None:
+    body = (
+        f"Thank you for reporting an issue for '{asset_name}'.\n"
+        f"Your issue number is {issue_number}.\n\n"
+    )
+    if tracking_url:
+        body += f"Track its status here: {tracking_url}\n"
+    send_email(reporter_contact or os.getenv("ADMIN_EMAIL", ""), f"[MaintainIQ] Issue {issue_number} received", body)

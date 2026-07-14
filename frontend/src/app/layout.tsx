@@ -4,6 +4,7 @@ import "./globals.css";
 import Link from "next/link";
 import { ClerkProvider } from "@clerk/nextjs";
 import AuthButtons from "@/components/AuthButtons";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { ClerkAuthSync } from "@/lib/clerk";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <ClerkProvider>
       <ClerkAuthSync />
+      <ServiceWorkerRegister />
       <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
         <body className="min-h-full flex flex-col bg-gray-50">
           <header className="bg-white border-b border-gray-200 shadow-sm">
@@ -38,6 +40,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   </Link>
                   <Link href="/dashboard/issues" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition">
                     Issues
+                  </Link>
+                  <Link href="/dashboard/preventive" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition">
+                    Preventive
+                  </Link>
+                  <Link href="/dashboard/analytics" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition">
+                    Analytics
+                  </Link>
+                  <Link href="/dashboard/qr-print" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition">
+                    QR Print
                   </Link>
                   <Link href="/track" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition">
                     Track

@@ -34,8 +34,10 @@ class Asset(Base):
     last_service_date = Column(Date, nullable=True)
     next_service_date = Column(Date, nullable=True)
     assigned_technician_id = Column(String(100), nullable=True)
+    parent_asset_id = Column(UUID(as_uuid=True), ForeignKey("assets.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     issues = relationship("Issue", back_populates="asset", lazy="selectin")
     history = relationship("AssetHistory", back_populates="asset", lazy="selectin")
+    children = relationship("Asset", backref="parent", remote_side=[id])

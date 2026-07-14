@@ -14,6 +14,61 @@ from app.middleware.auth import require_technician_or_admin
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 
+def _status(i: Issue) -> str:
+    return i.status.value if hasattr(i.status, "value") else i.status
+
+
+@router.get("/cost-analytics")
+def cost_analytics(request: Request, db: Session = Depends(get_db)):
+    require_technician_or_admin(request)
+    maint = db.query(MaintenanceRecord).all()
+    issues = db.query(Issue).all()
+    assets = db.query(Asset).all()
+    asset_map = {a.id: a for a in assets}
+    issue_map = {i.id: i for i in issues}
+
+    total_cost = sum(float(m.cost or 0) for m in maint)
+
+    cost_by_asset = {}
+    cost_by_location = defaultdict(float)
+    for m in maint:
+        issue = issue_map.get(m.issue_id)
+        if not issue:
+            continue
+        asset = asset_map.get(issue.asset_id)
+        if not asset:
+            continue
+        amt = float(m.cost or 0)
+        if asset.asset_code not in cost_by_asset:
+            cost_by_asset[asset.asset_code] = {"asset_code": asset.asset_code, "name": asset.name, "cost": 0.0}
+        cost_by_asset[asset.asset_code]["cost"] += amt
+        cost_by_location[asset.location] += amt
+
+    top_assets = sorted(cost_by_asset.values(), key=lambda x: -x["cost"])[:5]
+    top_locations = [{"location": loc, "cost": round(c, 2)} for loc, c in sorted(cost_by_location.items(), key=lambda x: -x[1])[:5]]
+
+    resolved = [i for i in issues if _status(i) in ("resolved", "closed")]
+    mttr_hours = 0.0
+    if resolved:
+        total_sec = sum((i.updated_at - i.created_at).total_seconds() for i in resolved)
+        mttr_hours = round((total_sec / len(resolved)) / 3600.0, 1)
+
+    issues_with_cost = {m.issue_id for m in maint}
+    avg_cost_per_issue = round(total_cost / len(issues_with_cost), 2) if issues_with_cost else 0.0
+
+    open_count = sum(1 for i in issues if _status(i) in ("reported", "assigned", "inspection_started", "maintenance_in_progress", "waiting_for_parts", "reopened"))
+
+    return {
+        "total_maintenance_cost": round(total_cost, 2),
+        "avg_cost_per_issue": avg_cost_per_issue,
+        "mttr_hours": mttr_hours,
+        "resolved_count": len(resolved),
+        "open_count": open_count,
+        "top_assets_by_cost": [{"asset_code": a["asset_code"], "name": a["name"], "cost": round(a["cost"], 2)} for a in top_assets],
+        "top_locations_by_cost": top_locations,
+    }
+
+
 @router.get("/summary")
 def dashboard_summary(request: Request, db: Session = Depends(get_db)):
     require_technician_or_admin(request)

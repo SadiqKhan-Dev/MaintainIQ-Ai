@@ -11,6 +11,7 @@ interface TrackStatus {
   status: string;
   priority: string;
   category: string | null;
+  work_order_type?: string;
   created_at: string;
   updated_at: string;
   asset_code: string | null;
@@ -50,12 +51,20 @@ export default function TrackDetailPage() {
           <span className={`px-3 py-1 rounded-full text-sm font-medium border ${STATUS_COLORS[data.status] || "bg-gray-100"}`}>{data.status.replace(/_/g, " ")}</span>
         </div>
         <h2 className="font-semibold text-gray-900">{data.title}</h2>
-        {data.asset_name && <p className="text-sm text-gray-500 mt-1">{data.asset_name} ({data.asset_code})</p>}
-        <div className="flex items-center gap-2 mt-4">
+        {data.asset_name && (
+          <p className="text-sm text-gray-500 mt-1">
+            <Link href={`/assets/${data.asset_code}`} className="hover:underline">{data.asset_name}</Link> ({data.asset_code})
+          </p>
+        )}
+        <div className="flex flex-wrap items-center gap-2 mt-4">
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${PRIORITY_COLORS[data.priority] || "bg-gray-100"}`}>{data.priority}</span>
+          {data.work_order_type === "preventive" && (
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700">Preventive</span>
+          )}
           <span className="text-xs text-gray-400">Reported {new Date(data.created_at).toLocaleString()}</span>
         </div>
         <p className="text-sm text-gray-400 mt-4">Last updated {new Date(data.updated_at).toLocaleString()}</p>
+        <p className="text-xs text-gray-400 mt-6">You&apos;ll receive email updates as the status changes. Bookmark this page to follow progress.</p>
       </div>
     </div>
   );

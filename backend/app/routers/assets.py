@@ -1,11 +1,13 @@
 import uuid
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.asset import Asset, AssetStatus
 from app.models.asset_history import AssetHistory
+from app.models.issue import Issue
+from app.models.maintenance_record import MaintenanceRecord
 from app.schemas.asset import AssetCreate, AssetUpdate, AssetResponse, AssetPublicResponse
 from app.middleware.auth import require_admin, require_technician_or_admin, extract_user_from_request
 from app.services.qr_service import generate_qr_code
@@ -32,7 +34,10 @@ def create_asset(payload: AssetCreate, request: Request, db: Session = Depends(g
     existing = db.query(Asset).filter(Asset.asset_code == payload.asset_code).first()
     if existing:
         raise HTTPException(status_code=409, detail=f"Asset code '{payload.asset_code}' already exists")
-    asset = Asset(**payload.model_dump())
+    data = payload.model_dump()
+    if data.get("parent_asset_id"):
+        data["parent_asset_id"] = uuid.UUID(data["parent_asset_id"])
+    asset = Asset(**data)
     db.add(asset)
     db.flush()
     _write_history(db, asset.id, None, user["user_id"], user["role"], "asset_created", f"Asset '{asset.name}' created with code {asset.asset_code}")
@@ -127,6 +132,8 @@ def update_asset(asset_id: str, payload: AssetUpdate, request: Request, db: Sess
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
     update_data = payload.model_dump(exclude_unset=True)
+    if update_data.get("parent_asset_id"):
+        update_data["parent_asset_id"] = uuid.UUID(update_data["parent_asset_id"])
     if "next_service_date" in update_data and "last_service_date" in update_data:
         if update_data["next_service_date"] and update_data["last_service_date"]:
             if update_data["next_service_date"] < update_data["last_service_date"]:
@@ -155,6 +162,27 @@ def retire_asset(asset_id: str, request: Request, db: Session = Depends(get_db))
     db.commit()
     db.refresh(asset)
     return asset
+
+
+@router.delete("/{asset_id}", status_code=204)
+def delete_asset(asset_id: str, request: Request, db: Session = Depends(get_db)):
+    user = require_admin(request)
+    asset = db.query(Asset).filter(Asset.id == uuid.UUID(asset_id)).first()
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+
+    issues = db.query(Issue).filter(Issue.asset_id == asset.id).all()
+    issue_ids = [i.id for i in issues]
+    if issue_ids:
+        db.query(MaintenanceRecord).filter(MaintenanceRecord.issue_id.in_(issue_ids)).delete(synchronize_session=False)
+        db.query(AssetHistory).filter(AssetHistory.issue_id.in_(issue_ids)).delete(synchronize_session=False)
+    db.query(AssetHistory).filter(AssetHistory.asset_id == asset.id).delete(synchronize_session=False)
+    if issue_ids:
+        db.query(Issue).filter(Issue.id.in_(issue_ids)).delete(synchronize_session=False)
+
+    db.delete(asset)
+    db.commit()
+    return Response(status_code=204)
 
 
 @router.get("/{code}/label")

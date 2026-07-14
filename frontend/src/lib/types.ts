@@ -9,6 +9,7 @@ export interface Asset {
   last_service_date: string | null;
   next_service_date: string | null;
   assigned_technician_id: string | null;
+  parent_asset_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -40,6 +41,10 @@ export interface Issue {
   ai_suggested: boolean;
   ai_edited: boolean;
   assigned_technician_id: string | null;
+  sla_due_at?: string | null;
+  work_order_type?: string;
+  generated_by?: string | null;
+  sla_status?: string | null;
   created_at: string;
   updated_at: string;
   asset_code?: string;
@@ -146,4 +151,11 @@ export const PRIORITY_COLORS: Record<string, string> = {
   medium: "bg-yellow-100 text-yellow-700",
   high: "bg-orange-100 text-orange-700",
   critical: "bg-red-100 text-red-700",
+};
+
+export const SLA_COLORS: Record<string, string> = {
+  ok: "bg-emerald-100 text-emerald-800 border-emerald-300",
+  due_soon: "bg-amber-100 text-amber-800 border-amber-300",
+  breached: "bg-red-100 text-red-800 border-red-300",
+  none: "bg-gray-100 text-gray-600 border-gray-300",
 };

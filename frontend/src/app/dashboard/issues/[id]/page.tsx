@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
-import { Issue, HistoryEntry, MaintenanceRecord, STATUS_COLORS, PRIORITY_COLORS } from "@/lib/types";
+import { Issue, HistoryEntry, MaintenanceRecord, STATUS_COLORS, PRIORITY_COLORS, SLA_COLORS } from "@/lib/types";
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
   reported: ["assigned"],
@@ -171,6 +171,11 @@ export default function IssueDetailPage() {
               AI Suggested
             </span>
           )}
+          {issue.sla_status && issue.sla_status !== "none" && (
+            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${SLA_COLORS[issue.sla_status]}`}>
+              {issue.sla_status === "breached" ? "SLA Breached" : issue.sla_due_at ? `SLA ${new Date(issue.sla_due_at).toLocaleString()}` : "SLA"}
+            </span>
+          )}
         </div>
       </div>
 
@@ -182,6 +187,12 @@ export default function IssueDetailPage() {
             <div><span className="text-gray-500">Category:</span> {issue.category || "—"}</div>
             <div><span className="text-gray-500">Reporter:</span> {issue.reporter_name || "—"}</div>
             <div><span className="text-gray-500">Assigned to:</span> {issue.assigned_technician_id || "Unassigned"}</div>
+            {issue.work_order_type && (
+              <div><span className="text-gray-500">Work Order:</span> <span className={issue.work_order_type === "preventive" ? "text-indigo-600 font-medium" : ""}>{issue.work_order_type}</span></div>
+            )}
+            {issue.sla_due_at && (
+              <div><span className="text-gray-500">SLA Due:</span> {new Date(issue.sla_due_at).toLocaleString()}</div>
+            )}
             <div className="pt-2"><span className="text-gray-500">Description:</span><p className="mt-1 text-gray-700">{issue.description}</p></div>
           </div>
         </div>
