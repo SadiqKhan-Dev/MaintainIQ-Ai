@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiFetch, API_BASE } from "@/lib/api";
 import { Asset, STATUS_COLORS, HealthAnalysis, PreventiveRec } from "@/lib/types";
 import { QRCodeSVG } from "qrcode.react";
 import { ZoomableQR } from "@/components/ZoomableQR";
+import EditAssetWithAI from "@/components/EditAssetWithAI";
 
 export default function AssetDetailPage() {
   const params = useParams();
@@ -14,6 +15,8 @@ export default function AssetDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showEdit, setShowEdit] = useState(false);
+  const [showEditAI, setShowEditAI] = useState(false);
+  const [showEditMenu, setShowEditMenu] = useState(false);
   const [retiring, setRetiring] = useState(false);
 
   const [health, setHealth] = useState<HealthAnalysis | null>(null);
@@ -55,6 +58,19 @@ export default function AssetDetailPage() {
       cancelled = true;
     };
   }, [code]);
+
+  const editMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!showEditMenu) return;
+    function onClick(e: MouseEvent) {
+      if (editMenuRef.current && !editMenuRef.current.contains(e.target as Node)) {
+        setShowEditMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [showEditMenu]);
 
   const publicUrl = typeof window !== "undefined" ? `${window.location.origin}/assets/${code}` : `${API_BASE}/assets/${code}`;
 
@@ -137,7 +153,34 @@ export default function AssetDetailPage() {
             <div className="flex flex-wrap gap-3 mt-5">
               <Link href={`/assets/${code}`} target="_blank" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Open Public Page</Link>
               <button onClick={copyLink} className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50">Copy Link</button>
-              <button onClick={() => setShowEdit(!showEdit)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50">Edit</button>
+              <div className="relative" ref={editMenuRef}>
+                <button
+                  onClick={() => setShowEditMenu(!showEditMenu)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-1"
+                >
+                  Edit
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showEditMenu && (
+                  <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                    <button
+                      onClick={() => { setShowEditMenu(false); setShowEdit(!showEdit); }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      Manual Edit
+                    </button>
+                    <button
+                      onClick={() => { setShowEditMenu(false); setShowEditAI(!showEditAI); }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-purple-700 hover:bg-purple-50"
+                    >
+                      ✨ Edit with AI
+                    </button>
+                  </div>
+                )}
+              </div>
+              <Link href={`/assets/${code}/report`} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700">Report Issue</Link>
               {asset.status !== "retired" && (
                 <button onClick={handleRetire} disabled={retiring} className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 disabled:opacity-50">Retire Asset</button>
               )}
@@ -145,6 +188,14 @@ export default function AssetDetailPage() {
           </div>
 
           {showEdit && <EditAssetForm asset={asset} onSaved={() => { setShowEdit(false); load(); }} onCancel={() => setShowEdit(false)} />}
+
+          {showEditAI && (
+            <EditAssetWithAI
+              assetCode={code}
+              onUpdated={() => load()}
+              onClose={() => setShowEditAI(false)}
+            />
+          )}
 
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-3">AI Insights</h2>

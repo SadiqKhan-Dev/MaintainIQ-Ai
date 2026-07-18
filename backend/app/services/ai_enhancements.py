@@ -1,57 +1,38 @@
 import json
+import os
 from typing import Optional
-import httpx
-from app.config import AI_API_KEY, AI_PROVIDER
+
+import google.generativeai as genai
+from app.config import GEMINI_API_KEY, GEMINI_MODEL
+
+_genai_configured = False
+
+
+def _ensure_gemini():
+    global _genai_configured
+    if not _genai_configured and GEMINI_API_KEY:
+        genai.configure(api_key=GEMINI_API_KEY)
+        _genai_configured = True
 
 
 async def _call_llm(prompt: str, system: str, max_tokens: int = 800) -> Optional[str]:
     try:
-        if AI_PROVIDER == "openai":
-            return await _call_openai(prompt, system, max_tokens)
-        return await _call_anthropic(prompt, system, max_tokens)
+        return await _call_gemini(prompt, system, max_tokens)
     except Exception as e:
         print(f"AI enhancement failed: {e}")
         return None
 
 
-async def _call_anthropic(prompt: str, system: str, max_tokens: int) -> Optional[str]:
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": AI_API_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": "claude-sonnet-4-20250514",
-                "max_tokens": max_tokens,
-                "system": system,
-                "messages": [{"role": "user", "content": prompt}],
-            },
-        )
-        if response.status_code != 200:
-            raise Exception(f"Anthropic API error: {response.status_code}")
-        return response.json()["content"][0]["text"]
-
-
-async def _call_openai(prompt: str, system: str, max_tokens: int) -> Optional[str]:
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {AI_API_KEY}", "Content-Type": "application/json"},
-            json={
-                "model": "gpt-4o",
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": prompt},
-                ],
-                "max_tokens": max_tokens,
-            },
-        )
-        if response.status_code != 200:
-            raise Exception(f"OpenAI API error: {response.status_code}")
-        return response.json()["choices"][0]["message"]["content"]
+async def _call_gemini(prompt: str, system: str, max_tokens: int) -> Optional[str]:
+    if not GEMINI_API_KEY:
+        raise Exception("GEMINI_API_KEY not configured")
+    _ensure_gemini()
+    model = genai.GenerativeModel(GEMINI_MODEL, system_instruction=system)
+    response = await model.generate_content_async(
+        prompt,
+        generation_config={"max_output_tokens": max_tokens},
+    )
+    return response.text
 
 
 async def maintenance_summary(

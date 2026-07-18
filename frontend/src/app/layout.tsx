@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import { ClerkProvider } from "@clerk/nextjs";
 import AuthButtons from "@/components/AuthButtons";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { ClerkAuthSync } from "@/lib/clerk";
-
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "MaintainIQ - AI-Powered Asset Maintenance",
@@ -20,7 +16,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <ClerkProvider>
       <ClerkAuthSync />
       <ServiceWorkerRegister />
-      <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
+      <html lang="en" className="h-full">
         <body className="min-h-full flex flex-col bg-gray-50">
           <header className="bg-white border-b border-gray-200 shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

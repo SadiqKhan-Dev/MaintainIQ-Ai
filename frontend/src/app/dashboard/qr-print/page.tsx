@@ -9,6 +9,8 @@ export default function QrPrintPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [selectAll, setSelectAll] = useState(true);
+  const [category, setCategory] = useState("all");
+  const [location, setLocation] = useState("all");
 
   useEffect(() => {
     apiFetch("/api/assets")
@@ -20,11 +22,36 @@ export default function QrPrintPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const categories = ["all", ...Array.from(new Set(assets.map((a) => a.category).filter(Boolean))).sort()];
+  const locations = ["all", ...Array.from(new Set(assets.map((a) => a.location).filter(Boolean))).sort()];
+
+  const filtered = assets.filter(
+    (a) =>
+      (category === "all" || a.category === category) &&
+      (location === "all" || a.location === location)
+  );
+
   function toggle(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAllFiltered() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      filtered.forEach((a) => next.add(a.id));
+      return next;
+    });
+  }
+
+  function clearAllFiltered() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      filtered.forEach((a) => next.delete(a.id));
       return next;
     });
   }
@@ -56,6 +83,33 @@ export default function QrPrintPage() {
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-3 mb-6 print:hidden">
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        >
+          {categories.map((c) => (
+            <option key={c} value={c}>{c === "all" ? "All categories" : c}</option>
+          ))}
+        </select>
+        <select
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        >
+          {locations.map((l) => (
+            <option key={l} value={l}>{l === "all" ? "All locations" : l}</option>
+          ))}
+        </select>
+        <button onClick={selectAllFiltered} className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+          Select filtered ({filtered.length})
+        </button>
+        <button onClick={clearAllFiltered} className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+          Clear filtered
+        </button>
+      </div>
+
       <div className="hidden print:block print-title mb-4">
         <h1 className="text-lg font-bold">MaintainIQ Asset QR Labels</h1>
       </div>
@@ -80,7 +134,7 @@ export default function QrPrintPage() {
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden max-h-80 overflow-y-auto">
           <table className="w-full text-sm">
             <tbody className="divide-y divide-gray-50">
-              {assets.map((a) => (
+              {filtered.map((a) => (
                 <tr key={a.id} className="hover:bg-gray-50">
                   <td className="px-4 py-2 w-10">
                     <input type="checkbox" checked={selected.has(a.id)} onChange={() => toggle(a.id)} />
